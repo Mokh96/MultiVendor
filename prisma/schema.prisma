@@ -1,0 +1,487 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model brand {
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(145)
+  image         String?   @db.VarChar(255)
+  icon_img      String?   @db.VarChar(255)
+  slug          String    @db.VarChar(145)
+  description   String?   @db.VarChar(255)
+  created_by    Int
+  created_at    DateTime? @default(now()) @db.DateTime(0)
+  modified_by   Int?
+  modified_at   DateTime? @db.DateTime(0)
+  originator    user      @relation("created_by_user",fields: [created_by], references: [id] )
+  modified      user?     @relation("modified_by_user", fields: [modified_by], references: [id])
+  product       product[]
+
+  @@index([created_by], map: "fk_brand_user_idx")
+  @@index([modified_by], map: "fk_brand_user_idx2")
+}
+
+model city {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(45)
+  zipcode    String   @db.VarChar(10)
+  citycol    String?  @db.VarChar(45)
+  id_country Int?
+  country    country? @relation(fields: [id_country], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_city_country")
+
+  @@index([id], map: "fk_city_country_idx")
+  @@index([id_country], map: "fk_city_country_idx1")
+}
+
+model complaint {
+  id          Int        @id @default(autoincrement())
+  id_customer Int
+  id_vendor   Int
+  by_customer Int?       @db.TinyInt
+  title       String?    @db.VarChar(255)
+  message     String     @db.VarChar(1000)
+  created_at  DateTime?  @default(now()) @db.DateTime(0)
+  user        user       @relation(fields: [id_customer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_complaint_customer")
+  vendor      vendor     @relation(fields: [id_vendor], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_complaint_vendor")
+  response    response[]
+
+  @@index([id_customer], map: "fk_complaint_customer_idx")
+  @@index([id_vendor], map: "fk_complaint_vendor_idx")
+}
+
+model country {
+  id         Int        @id @default(autoincrement())
+  name       String?    @db.VarChar(155)
+  flag_img   String?    @db.VarChar(255)
+  iso_code   String?    @db.VarChar(5)
+  phone_code String?    @db.VarChar(5)
+  city       city[]
+  province   province[]
+}
+
+model currency {
+  id          Int    @id @default(autoincrement())
+  name        String @db.VarChar(45)
+  code        String @db.VarChar(10)
+  symbol      String @db.VarChar(5)
+  change_rate Float?
+  is_default  Int    @default(0) @db.TinyInt
+}
+
+model customer_category {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(145)
+}
+
+model discount {
+  id                   Int               @id @default(autoincrement())
+  name                 String            @db.VarChar(45)
+  cupon                String?           @db.VarChar(45)
+  value                Int
+  type                 Int
+  date_start           DateTime          @db.DateTime(0)
+  date_end             DateTime          @db.DateTime(0)
+  state                Int               @default(1)
+  id_category_customer Int?
+  id_product           Int?
+  id_vendor            Int?
+  id_customer          Int?
+  id_category_product  Int?
+  max_value            String?           @db.VarChar(45)
+  is_use_once          Int?              @db.TinyInt
+  qte                  Int?
+  product_category     product_category? @relation(fields: [id_category_product], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_discount_product_cateegory")
+  user                 user?             @relation(fields: [id_customer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_discount_customer")
+  product              product?          @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_discount_product")
+  vendor               vendor?           @relation(fields: [id_vendor], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_discount_vendor")
+
+  @@index([id_customer], map: "fk_discount_customer_idx")
+  @@index([id_category_product], map: "fk_discount_product_cateegory_idx")
+  @@index([id_product], map: "fk_discount_product_idx")
+  @@index([id_vendor], map: "fk_discount_vendor_idx")
+}
+
+model feedback {
+  id          Int       @id @default(autoincrement())
+  comment     String    @db.VarChar(255)
+  rating      Float
+  image       String?   @db.VarChar(255)
+  id_customer Int?
+  id_order    Int?
+  id_vendor   Int?
+  id_product  Int?
+  created_at  DateTime? @default(now()) @db.DateTime(0)
+  user        user?     @relation(fields: [id_customer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_feedback_customer")
+  order       order?    @relation(fields: [id_order], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_feedback_order")
+  vendor      vendor?   @relation(fields: [id_vendor], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_feedback_vendor")
+
+  @@index([id_customer], map: "fk_feedback_customer_idx")
+  @@index([id_order], map: "fk_feedback_order_idx")
+  @@index([id_vendor], map: "fk_feedback_vendor_idx")
+}
+
+model lang {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(45)
+  description String? @db.VarChar(255)
+  code        String  @db.VarChar(10)
+  flag        String? @db.VarChar(255)
+  is_extra_id Int?
+  file        String  @db.VarChar(255)
+}
+
+model medal {
+  id                           Int          @id @default(autoincrement())
+  name                         String       @db.VarChar(145)
+  icon_img                     String?      @db.VarChar(255)
+  image                        String?      @db.VarChar(255)
+  condition                    String       @db.VarChar(1000)
+  created_by                   Int
+  created_at                   DateTime?    @default(now()) @db.DateTime(0)
+  modified_by                  Int?
+  modified_at                  DateTime?    @db.DateTime(0)
+  user_created_by  user         @relation("medal_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_medal_admin")
+  user_modified_by user?        @relation("medal_modified_byTouser", fields: [modified_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_medal_user")
+  user_medal                   user_medal[]
+
+  @@index([created_by], map: "fk_medal_admin_idx")
+  @@index([modified_by], map: "fk_medal_user_idx")
+}
+
+model option_item {
+  id             Int             @id @default(autoincrement())
+  name           String          @db.VarChar(45)
+  color          String?         @db.VarChar(45)
+  price          Int
+  image          String?         @db.VarChar(255)
+  id_option      Int?
+  product_option product_option? @relation(fields: [id_option], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_option_item_option_product")
+
+  @@index([id_option], map: "fk_option_item_option_product_idx")
+}
+
+model order {
+  id                Int          @id @default(autoincrement())
+  state             Int          @default(1)
+  total_price       Int
+  total_promo_price Int          @default(0)
+  total_with_promo  Int
+  total_shipping    Int?
+  total_tax         Int?
+  total_amount      Int?
+  website_comission Int?
+  customer_name     String?      @db.VarChar(255)
+  customer_country  String?      @db.VarChar(45)
+  customer_phone    String?      @db.VarChar(45)
+  customer_email    String?      @db.VarChar(45)
+  comment           String?      @db.VarChar(255)
+  id_customer       Int?
+  id_vendor         Int?
+  created_at        DateTime?    @default(now()) @db.DateTime(0)
+  Finished_at       DateTime?    @db.DateTime(0)
+  user              user?        @relation(fields: [id_customer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_customer")
+  vendor            vendor?      @relation(fields: [id_vendor], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_vendor")
+  feedback          feedback[]
+  order_item        order_item[]
+
+  @@index([id_customer], map: "fk_order_customer_idx")
+  @@index([id_vendor], map: "fk_order_vendor_idx")
+}
+
+model order_item {
+  id           Int      @id @default(autoincrement())
+  product_name String   @db.VarChar(255)
+  quantity     Int
+  price        Int
+  total_price  Int
+  comment      String?  @db.VarChar(255)
+  id_product   Int?
+  id_order     Int?
+  order        order?   @relation(fields: [id_order], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_item_order")
+  product      product? @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_item_product")
+
+  @@index([id_order], map: "fk_order_item_order_idx")
+  @@index([id_product], map: "fk_order_item_product_idx")
+}
+
+model page {
+  id                          Int       @id @default(autoincrement())
+  title                       String?   @db.VarChar(145)
+  subtitle                    String?   @db.VarChar(145)
+  slug                        String    @db.VarChar(145)
+  content_html                String    @db.Text
+  created_by                  Int
+  created_at                  DateTime? @db.DateTime(0)
+  modified_by                 Int?
+  modified_at                 DateTime? @updatedAt @db.DateTime(0)
+  user_created_by             user      @relation("page_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_page_user01")
+  user_modified_by            user?     @relation("page_modified_byTouser", fields: [modified_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_page_user02")
+
+  @@index([created_by], map: "fk_page_user01_idx")
+  @@index([modified_by], map: "fk_page_user02_idx")
+}
+
+model parametres {
+  id            Int     @id @default(autoincrement())
+  homepage_json String? @db.Text
+  product_json  String? @db.Text
+}
+
+model product {
+  id                            Int       @id @default(autoincrement())
+  name                         String    @db.VarChar(100)
+  image                         String?   @db.VarChar(255)
+  sku                           String?   @db.VarChar(45)
+  slug                          String    @db.VarChar(145)
+  weight                        String?   @db.VarChar(45)
+  length                        String?   @db.VarChar(45)
+  width                         String?   @db.VarChar(45)
+  height                        String?   @db.VarChar(45)
+  short_description             String?   @db.VarChar(255)
+  long_description              String?   @db.Text
+  price                         Int
+  promo                         Int       @default(0)
+  wholesale_price               Int
+  initial_quantity              Int       @default(0)
+  quantity                      Int       @default(0)
+  is_stock                      Int       @default(0) @db.TinyInt
+  state                         Int       @default(1)
+  id_vendor                     Int?
+  id_brand                      Int?
+  id_cat1                       Int
+  id_cat2                       Int?
+  id_cat3                       Int?
+  id_cat_store                  Int?
+  created_by                    Int
+  created_at                    DateTime? @default(now()) @db.DateTime(0)
+  modified_by                   Int?
+  modified_at                   DateTime? @updatedAt @db.DateTime(0)
+  
+  
+  user_created_by               user      @relation("product_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_user01")
+  brand                         brand?    @relation(fields: [id_brand], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_brand")
+
+  product_category_01           product_category? @relation("product_id_cat1Toproduct_category", fields: [id_cat1], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category01")
+  product_category_02           product_category? @relation("product_id_cat2Toproduct_category", fields: [id_cat2], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category02")
+  product_category_03           product_category? @relation("product_id_cat3Toproduct_category", fields: [id_cat3], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category03")
+  store_category                store_category?   @relation(fields: [id_cat_store], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category_store")
+  user_modified_by              user?             @relation("product_modified_byTouser", fields: [modified_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_user02")
+  discount                      discount[]
+  order_item                    order_item[]
+  product_gallery               product_gallery[]
+  wishlist                      wishlist[]
+
+  @@index([id_brand], map: "fk_product_brand_idx")
+  @@index([id_cat1], map: "fk_product_category01_idx")
+  @@index([id_cat2], map: "fk_product_category02_idx")
+  @@index([id_cat3], map: "fk_product_category03_idx")
+  @@index([id_cat_store], map: "fk_product_category_store_idx")
+  @@index([created_by], map: "fk_product_user01_idx")
+  @@index([modified_by], map: "fk_product_user02_idx")
+}
+
+model product_category {
+  id                                        Int        @id @default(autoincrement())
+  name                                      String     @db.VarChar(145)
+  image                                     String?    @db.VarChar(255)
+  icon_img                                  String?    @db.VarChar(255)
+  slug                                      String     @db.VarChar(145)
+  desciption                                String?    @db.VarChar(500)
+  created_by                                Int
+  created_at                                DateTime?  @default(now()) @db.DateTime(0)
+  modified_by                               Int?
+  modified_at                               DateTime?  @updatedAt @db.DateTime(0)
+  user_created_by                           user       @relation("product_category_created_byTouser", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category_admin01")
+  user_modified_by                          user?      @relation("product_category_modified_byTouser", fields: [modified_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category_admin02")
+  discount                                  discount[]
+  product_category_01                       product[]  @relation("product_id_cat1Toproduct_category")
+  product_category_02                       product[]  @relation("product_id_cat2Toproduct_category")
+  product_category_03                       product[]  @relation("product_id_cat3Toproduct_category")
+
+  @@index([created_by], map: "fk_product_category_admin01_idx")
+  @@index([modified_by], map: "fk_product_category_admin02_idx")
+}
+
+model product_gallery {
+  id         Int     @id @default(autoincrement())
+  image      String  @db.VarChar(255)
+  id_product Int
+  product    product @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_gallery_product")
+
+  @@index([id_product], map: "fk_product_gallery_product_idx")
+}
+
+model product_option {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(45)
+  is_multi    Int?          @db.TinyInt
+  is_required Int?          @db.TinyInt
+  option_item option_item[]
+}
+
+model province {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(45)
+  id_country  Int?
+  Provincecol String?  @db.VarChar(45)
+  country     country? @relation(fields: [id_country], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_province_country")
+
+  @@index([id_country], map: "fk_province_country_idx")
+}
+
+model response {
+  id                           Int       @id @default(autoincrement())
+  message                      String    @db.VarChar(255)
+  id_complaint                 Int
+  id_admin                     Int
+  id_user                      Int
+  created_at                   DateTime? @default(now()) @db.DateTime(0)
+  response_admin               user      @relation("response_id_adminTouser", fields: [id_admin], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_response_admin")
+  complaint                    complaint @relation(fields: [id_complaint], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_response_comlaint")
+  response_user                user      @relation("response_id_userTouser", fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_response_user")
+
+  @@index([id_admin], map: "fk_response_admin_idx")
+  @@index([id_complaint], map: "fk_response_complaint_idx")
+  @@index([id_user], map: "fk_response_user_idx")
+}
+
+model store_category {
+  Id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(45)
+  id_vendor Int?
+  vendor    vendor?   @relation(fields: [id_vendor], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_store_category_vendor")
+  product   product[]
+
+  @@index([id_vendor], map: "fk_store_category_vendor_idx")
+}
+
+model translation {
+  id           Int     @id @default(autoincrement())
+  name_ar      String? @db.VarChar(255)
+  name_fr      String? @db.VarChar(255)
+  name_en      String? @db.VarChar(255)
+  name_de      String? @db.VarChar(255)
+  name_it      String? @db.VarChar(255)
+  name_ch      String? @db.VarChar(255)
+  name_jp      String? @db.VarChar(255)
+  name_kr      String? @db.VarChar(255)
+  name_es      String? @db.VarChar(255)
+  name_extra_1 String? @db.VarChar(255)
+  name_extra_2 String? @db.VarChar(255)
+  name_extra_3 String? @db.VarChar(255)
+  id_object    Int?
+  type         String? @db.VarChar(45)
+}
+
+model user {
+  id                                                  Int                @id @default(autoincrement())
+  username                                            String             @db.VarChar(100)@unique
+  last_name                                           String             @db.VarChar(100)
+  first_name                                          String             @db.VarChar(100)
+  phone                                               String?            @db.VarChar(15)
+  password                                            String             @db.VarChar(400)
+  password_salt                                       String?            @db.VarChar(45)
+  email                                               String?            @db.VarChar(45)
+  adresse                                             String?            @db.VarChar(155)
+  adresse2                                            String?            @db.VarChar(155)
+  aff_code                                            String?            @unique(map: "aff_code_UNIQUE") @db.VarChar(45)
+  aff_by                                              Int?
+  type                                                Int?
+  is_active                                           Int                @default(1) @db.TinyInt
+  is_confirmed_email                                  Int?               @db.TinyInt
+  is_confirmed_phone                                  Int?               @db.TinyInt
+  id_customer_category                                Int?
+  created_at                                          DateTime?          @default(now()) @db.DateTime(0)
+  modifed_by                                          Int?
+  modified_at                                         DateTime?          @updatedAt @db.DateTime(0)
+  user_aff_by                                         user?              @relation("userTouser_aff_by", fields: [aff_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_affuser")
+  user_modifed_by                                     user?              @relation("userTouser_modifed_by", fields: [modifed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_modify_user")
+  complaint                                           complaint[]
+  discount                                            discount[]
+  feedback                                            feedback[]
+  medal_created_by                                    medal[]            @relation("medal_created_byTouser")
+  medal_modified_by                                   medal[]            @relation("medal_modified_byTouser")
+  order                                               order[]
+  page_created_by                                     page[]             @relation("page_created_byTouser")
+  page_modified_by                                    page[]             @relation("page_modified_byTouser")
+  product_created_by                                  product[]          @relation("product_created_byTouser")
+  product_modified_by                                 product[]          @relation("product_modified_byTouser")
+  product_category_created_by                         product_category[] @relation("product_category_created_byTouser")
+  product_category__modified_by                       product_category[] @relation("product_category_modified_byTouser")
+  response_admin                                      response[]         @relation("response_id_adminTouser")
+  response_user                                       response[]         @relation("response_id_userTouser")
+  user_aff_this                                         user?             @relation("userTouser_aff_by")
+  user_modifed_this                                     user?             @relation("userTouser_modifed_by")
+  vendor                                              vendor?
+  wishlist                                            wishlist?
+  brand_created_by                                    brand[]             @relation("created_by_user")
+  brand_modified_by                                   brand[]             @relation("modified_by_user")
+
+  @@index([aff_by], map: "fk_user_affuser_idx")
+  @@index([modifed_by], map: "fk_user_modify_user_idx")
+}
+
+model user_medal {
+  id_user   Int      @id @default(autoincrement())
+  id_medal  Int?
+  expiry    DateTime @db.DateTime(0)
+  is_active Int?     @db.TinyInt
+  medal     medal?   @relation(fields: [id_medal], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_medal")
+
+  @@index([id_medal], map: "fk_user_medal_idx")
+}
+
+model vendor {
+  id                 Int              @id @default(autoincrement())
+  name               String           @db.VarChar(45)
+  slug               String           @db.VarChar(45)
+  short_description  String?          @db.VarChar(150)
+  long_description   String?          @db.Text
+  phone1             String?          @db.VarChar(15)
+  phone2             String?          @db.VarChar(15)
+  phone3             String?          @db.VarChar(15)
+  email              String?          @db.VarChar(45)
+  website            String?          @db.VarChar(45)
+  icon_img           String?          @db.VarChar(255)
+  cover_img          String?          @db.VarChar(255)
+  social_fb          String?          @db.VarChar(145)
+  social_yt          String?          @db.VarChar(145)
+  social_tw          String?          @db.VarChar(145)
+  social_tk          String?          @db.VarChar(145)
+  social_ig          String?          @db.VarChar(145)
+  is_active          Int              @default(1) @db.TinyInt
+  is_page_visible    Int              @default(0) @db.TinyInt
+  is_product_visible Int              @default(0) @db.TinyInt
+  is_maintenance     Int              @default(0) @db.TinyInt
+  id_admin           Int
+  id_vendor_category Int?
+  user               user             @relation(fields: [id_admin], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vendor_admin")
+  complaint          complaint[]
+  discount           discount[]
+  feedback           feedback[]
+  order              order[]
+  store_category     store_category[]
+
+  @@index([id_admin], map: "fk_vendor_admin_idx")
+}
+
+model vendor_category {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(145)
+}
+
+model wishlist {
+  id          Int     @id @default(autoincrement())
+  id_customer Int
+  id_product  Int
+  user        user    @relation(fields: [id_customer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_wishlist_customer")
+  product     product @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_wishlist_product")
+
+  @@index([id_customer], map: "fk_wishlist_customer_idx")
+  @@index([id_product], map: "fk_wishlist_product_idx")
+}
